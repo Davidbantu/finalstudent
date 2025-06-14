@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Student Details App</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      background: #f8f9fa;
+      margin: 0;
+      padding: 0;
+    }
+    h1 {
+      background: #2b7a78;
+      color: #fff;
+      margin: 0;
+      padding: 20px;
+      text-align: center;
+    }
+    .container {
+      max-width: 700px;
+      background: #ffffff;
+      margin: 40px auto;
+      padding: 30px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      border-radius: 8px;
+    }
+    form {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 15px;
+      align-items: center;
+      margin-bottom: 25px;
+    }
+    form input, form select {
+      padding: 8px;
+      font-size: 1rem;
+      border: 1px solid #dcdcdc;
+      border-radius: 4px;
+      flex: 1 1 150px;
+    }
+    form button {
+      background: #2b7a78;
+      color: #fff;
+      padding: 10px 18px;
+      border: none;
+      border-radius: 4px;
+      font-size: 1rem;
+      cursor: pointer;
+      flex: 1 1 100px;
+      max-width: 150px;
+    }
+    form button:hover {
+      background: #205a5a;
+    }
+    .tabs {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+    .tab {
+      padding: 10px 20px;
+      background: #def2f1;
+      color: #222;
+      border-radius: 6px 6px 0 0;
+      cursor: pointer;
+      border: 1px solid #dcdcdc;
+      border-bottom: none;
+      font-weight: 500;
+    }
+    .tab.active {
+      background: #2b7a78;
+      color: #fff;
+      border-bottom: 2px solid #fff;
+    }
+    .tab-content {
+      display: none;
+    }
+    .tab-content.active {
+      display: block;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 18px;
+    }
+    th, td {
+      border: 1px solid #ddd;
+      padding: 8px;
+      text-align: left;
+    }
+    th {
+      background: #def2f1;
+    }
+    #message {
+      color: green;
+      margin-bottom: 15px;
+    }
+    .actions button {
+      margin-right: 4px;
+      background: #3aafa9;
+      color: #fff;
+      border: none;
+      border-radius: 3px;
+      padding: 5px 10px;
+      cursor: pointer;
+    }
+    .actions button.delete {
+      background: #ff6161;
+    }
+    .actions button.save {
+      background: #49b86f;
+    }
+    .actions button.cancel {
+      background: #aaa;
+    }
+    .actions button:hover {
+      opacity: 0.9;
+    }
+    @media (max-width: 600px) {
+      .container { padding: 10px; }
+      form { flex-direction: column; gap: 8px; }
+    }
+  </style>
+</head>
+<body>
+  <h1>Student Details App</h1>
+  <div class="container">
+    <div class="tabs">
+      <div class="tab active" data-tab="personal">Student Personal Details</div>
+      <div class="tab" data-tab="academic">Academic Info</div>
+      <div class="tab" data-tab="parent">Parent Contacts</div>
+    </div>
+
+    <!-- PERSONAL DETAILS -->
+    <div class="tab-content active" id="personal">
+      <form id="personalForm">
+        <input type="text" id="studentName" placeholder="Student Name" required>
+        <input type="text" id="rollNumber" placeholder="Roll Number" required>
+        <input type="text" id="studentClass" placeholder="Class" required>
+        <button type="submit">Add</button>
+      </form>
+      <div id="personalMsg"></div>
+      <table>
+        <thead>
+          <tr>
+            <th>Student Name</th>
+            <th>Roll Number</th>
+            <th>Class</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="personalTableBody"></tbody>
+      </table>
+    </div>
+
+    <!-- ACADEMIC INFO -->
+    <div class="tab-content" id="academic">
+      <form id="academicForm">
+        <input type="text" id="rollNumberA" placeholder="Roll Number" required>
+        <input type="text" id="enrollmentYear" placeholder="Enrollment Year" required>
+        <input type="text" id="stream" placeholder="Stream" required>
+        <button type="submit">Add</button>
+      </form>
+      <div id="academicMsg"></div>
+      <table>
+        <thead>
+          <tr>
+            <th>Roll Number</th>
+            <th>Enrollment Year</th>
+            <th>Stream</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="academicTableBody"></tbody>
+      </table>
+    </div>
+
+    <!-- PARENT CONTACTS -->
+    <div class="tab-content" id="parent">
+      <form id="parentForm">
+        <input type="text" id="rollNumberP" placeholder="Roll Number" required>
+        <input type="text" id="parentName" placeholder="Parent/Guardian Name" required>
+        <input type="text" id="parentContact" placeholder="Contact Number" required>
+        <button type="submit">Add</button>
+      </form>
+      <div id="parentMsg"></div>
+      <table>
+        <thead>
+          <tr>
+            <th>Roll Number</th>
+            <th>Parent/Guardian Name</th>
+            <th>Contact Number</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="parentTableBody"></tbody>
+      </table>
+    </div>
+  </div>
+  <script>
+    // ======== CONFIGURATION ========
+    // Replace this with your Apps Script web app URL!
+    const API_URL = 'PASTE_YOUR_APPS_SCRIPT_WEB_APP_URL_HERE';
+
+    const tableMap = {
+      personal: 'Student_Personal_Details',
+      academic: 'Academic_Info',
+      parent: 'Parent_Contacts',
+    };
+    // Store data in JS for current tab state (for editing)
+    const currentData = {
+      personal: [],
+      academic: [],
+      parent: []
+    };
+
+    // ======= TABS =======
+    document.querySelectorAll('.tab').forEach(tab => {
+      tab.onclick = function() {
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(tc => tc.classList.remove('active'));
+        tab.classList.add('active');
+        document.getElementById(tab.dataset.tab).classList.add('active');
+        loadTable(tab.dataset.tab);
+      }
+    });
+
+    // ======= API CALLS =======
+    function loadTable(tab) {
+      fetch(`${API_URL}?table=${encodeURIComponent(tableMap[tab])}`)
+        .then(res => res.json())
+        .then(json => {
+          currentData[tab] = json.data.map(arr => arr.slice());
+          renderTable(tab);
+        });
+    }
+
+    function addRow(tab, rowData, callback) {
+      fetch(API_URL, {
+        method: 'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({
+          action: 'add',
+          table: tableMap[tab],
+          rowData: rowData
+        })
+      }).then(() => loadTable(tab));
+    }
+
+    function editRow(tab, rowIndex, rowData, callback) {
+      fetch(API_URL, {
+        method: 'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({
+          action: 'edit',
+          table: tableMap[tab],
+          rowIndex: rowIndex,
+          rowData: rowData
+        })
+      }).then(() => loadTable(tab));
+    }
+
+    function deleteRow(tab, rowIndex, callback) {
+      fetch(API_URL, {
+        method: 'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({
+          action: 'delete',
+          table: tableMap[tab],
+          rowIndex: rowIndex
+        })
+      }).then(() => loadTable(tab));
+    }
+
+    // ======= TABLE RENDERING =======
+    function renderTable(tab) {
+      let columns = [];
+      let formIds = [];
+      if(tab === 'personal') {
+        columns = ['Student Name','Roll Number','Class'];
+        formIds = ['studentName','rollNumber','studentClass'];
+      } else if(tab === 'academic') {
+        columns = ['Roll Number','Enrollment Year','Stream'];
+        formIds = ['rollNumberA','enrollmentYear','stream'];
+      } else if(tab === 'parent') {
+        columns = ['Roll Number','Parent/Guardian Name','Contact Number'];
+        formIds = ['rollNumberP','parentName','parentContact'];
+      }
+      const body = document.getElementById(tab+'TableBody');
+      body.innerHTML = '';
+      currentData[tab].forEach((row, idx) => {
+        if(row.editing) {
+          let editRow = '';
+          columns.forEach((col, i) => {
+            editRow += `<td><input type="text" value="${row[i]}" data-idx="${i}" style="width: 95%"></td>`;
+          });
+          editRow += `<td class="actions">
+            <button class="save">Save</button>
+            <button class="cancel">Cancel</button>
+          </td>`;
+          body.innerHTML += `<tr data-row="${idx}">${editRow}</tr>`;
+        } else {
+          let displayRow = '';
+          columns.forEach((col, i) => {
+            displayRow += `<td>${row[i]}</td>`;
+          });
+          displayRow += `<td class="actions">
+            <button class="edit">Edit</button>
+            <button class="delete">Delete</button>
+          </td>`;
+          body.innerHTML += `<tr data-row="${idx}">${displayRow}</tr>`;
+        }
+      });
+    }
+
+    // ======= FORM SUBMISSION =======
+    document.getElementById('personalForm').onsubmit = function(e) {
+      e.preventDefault();
+      const name = document.getElementById('studentName').value.trim();
+      const roll = document.getElementById('rollNumber').value.trim();
+      const sclass = document.getElementById('studentClass').value.trim();
+      if (!name || !roll || !sclass) return;
+      addRow('personal', [name, roll, sclass]);
+      document.getElementById('personalMsg').textContent = 'Student added.';
+      document.getElementById('personalForm').reset();
+      setTimeout(() => document.getElementById('personalMsg').textContent = '', 1500);
+    };
+    document.getElementById('academicForm').onsubmit = function(e) {
+      e.preventDefault();
+      const roll = document.getElementById('rollNumberA').value.trim();
+      const year = document.getElementById('enrollmentYear').value.trim();
+      const stream = document.getElementById('stream').value.trim();
+      if (!roll || !year || !stream) return;
+      addRow('academic', [roll, year, stream]);
+      document.getElementById('academicMsg').textContent = 'Academic info added.';
+      document.getElementById('academicForm').reset();
+      setTimeout(() => document.getElementById('academicMsg').textContent = '', 1500);
+    };
+    document.getElementById('parentForm').onsubmit = function(e) {
+      e.preventDefault();
+      const roll = document.getElementById('rollNumberP').value.trim();
+      const name = document.getElementById('parentName').value.trim();
+      const contact = document.getElementById('parentContact').value.trim();
+      if (!roll || !name || !contact) return;
+      addRow('parent', [roll, name, contact]);
+      document.getElementById('parentMsg').textContent = 'Parent contact added.';
+      document.getElementById('parentForm').reset();
+      setTimeout(() => document.getElementById('parentMsg').textContent = '', 1500);
+    };
+
+    // ======= ACTION BUTTONS =======
+    function tableBodyHandler(tab) {
+      return function(e) {
+        const tr = e.target.closest('tr');
+        if (!tr) return;
+        const idx = +tr.dataset.row;
+        if (e.target.classList.contains('delete')) {
+          deleteRow(tab, idx);
+        }
+        if (e.target.classList.contains('edit')) {
+          currentData[tab][idx].editing = true;
+          renderTable(tab);
+        }
+        if (e.target.classList.contains('save')) {
+          const inputs = tr.querySelectorAll('input');
+          const newRow = Array.from(inputs).map(input => input.value);
+          editRow(tab, idx, newRow);
+        }
+        if (e.target.classList.contains('cancel')) {
+          delete currentData[tab][idx].editing;
+          renderTable(tab);
+        }
+      }
+    }
+    document.getElementById('personalTableBody').onclick = tableBodyHandler('personal');
+    document.getElementById('academicTableBody').onclick = tableBodyHandler('academic');
+    document.getElementById('parentTableBody').onclick = tableBodyHandler('parent');
+
+    // ======= INITIAL LOAD =======
+    loadTable('personal'); // default first tab
+    // Optionally, auto-refresh every 10 seconds for real-time sync
+    // setInterval(() => {
+    //   const activeTab = document.querySelector('.tab.active').dataset.tab;
+    //   loadTable(activeTab);
+    // }, 10000);
+  </script>
+</body>
+</html>
